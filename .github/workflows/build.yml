@@ -1,0 +1,32 @@
+   name: Compilar APK
+   on:
+     workflow_dispatch:
+     push:
+       branches: [main]
+   jobs:
+     apk:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: actions/setup-java@v4
+           with:
+             distribution: temurin
+             java-version: '17'
+         - uses: subosito/flutter-action@v2
+           with:
+             channel: stable
+         - name: Crear proyecto Android
+           run: flutter create --platforms=android --org com.tuyyo --project-name tu_y_yo .
+         - name: Copiar la app
+           run: |
+             cp app_src/main.dart lib/main.dart
+             cp app_src/config.dart lib/config.dart
+             cp app_src/pubspec.yaml pubspec.yaml
+         - name: Ajustar Android
+           run: python3 patch_android.py
+         - run: flutter pub get
+         - run: flutter build apk --release
+         - uses: actions/upload-artifact@v4
+           with:
+             name: tu-y-yo-apk
+             path: build/app/outputs/flutter-apk/app-release.apk
